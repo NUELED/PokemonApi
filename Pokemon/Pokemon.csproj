@@ -39,4 +39,8 @@
     <ProjectReference Include="..\Pokemon.Infrastructure\Pokemon.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="logs\" />
+  </ItemGroup>
+
 </Project>
