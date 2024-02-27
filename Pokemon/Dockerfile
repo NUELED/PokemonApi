@@ -8,6 +8,9 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["Pokemon/Pokemon.csproj", "Pokemon/"]
+COPY ["Pokemon.Application/Pokemon.Application.csproj", "Pokemon.Application/"]
+COPY ["Pokemon.Domain/Pokemon.Domain.csproj", "Pokemon.Domain/"]
+COPY ["Pokemon.Infrastructure/Pokemon.Infrastructure.csproj", "Pokemon.Infrastructure/"]
 RUN dotnet restore "Pokemon/Pokemon.csproj"
 COPY . .
 WORKDIR "/src/Pokemon"

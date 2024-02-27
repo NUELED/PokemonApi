@@ -45,8 +45,8 @@ namespace Pokemon.Application.Services
             {
                 options.GroupNameFormat = "'v'VVV";
                 options.SubstituteApiVersionInUrl = true;
-            }); 
-      
+            });
+
             return services;
         }
 

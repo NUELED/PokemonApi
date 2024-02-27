@@ -1,0 +1,37 @@
+version: '3.4'
+
+networks:
+  backend:
+
+services:
+  
+  pokemondb:
+    container_name: pokemon-db
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports:
+      - 18001:1433 
+    environment:
+       - ACCEPT_EULA=Y
+       - MSSQL_SA_PASSWORD=Password1@123
+    networks:
+       - backend
+
+
+  pokemon:
+    container_name: pokemon-api
+    image: ${DOCKER_REGISTRY-}pokemon
+    build:
+      context: .
+      dockerfile: Pokemon/Dockerfile
+    networks:
+       - backend
+    ports:
+      - 18002:80
+   # depends_on:
+   #   - pokemondb
+      
+    environment:
+      - DB_HOST=pokemondb
+      - DB_NAME=PokemonDbMain
+      - DB_MSSQL_SA_PASSWORD=Password1@123
+ 

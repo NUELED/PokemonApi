@@ -32,7 +32,15 @@ builder.Services.AddControllers().AddNewtonsoftJson(s =>
 builder.Services.AddDependencies(builder.Configuration);
 builder.Services.AddScoped<IPokemonRepository, PokemonRepository>();
 
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnect")));
+
+var dbHost = Environment.GetEnvironmentVariable("DB_HOST");              
+var dbName = Environment.GetEnvironmentVariable("DB_NAME");             
+var dbPassword = Environment.GetEnvironmentVariable("DB_MSSQL_SA_PASSWORD");       //"password1";
+var connectionString = $"Server={dbHost};Database={dbName};User ID=sa;Password={dbPassword}";
+
+
+//builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DbConnect")));
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddCors(p => p.AddPolicy("pokemon", builder =>
 {
     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
@@ -57,6 +65,7 @@ builder.Services.AddSwaggerGen(x =>
 
 });
 
+
 var app = builder.Build();
 
 
@@ -72,11 +81,11 @@ app.UseCors("pokemon");
 app.UseAuthorization();
 
 app.MapControllers();
-var apiVersionSet = app.NewApiVersionSet()
-    .HasDeprecatedApiVersion(new ApiVersion(0, 0))
-    .HasApiVersion(new ApiVersion(1, 0))
-    .ReportApiVersions()
-    .Build();
+//var apiVersionSet = app.NewApiVersionSet()
+//    .HasDeprecatedApiVersion(new ApiVersion(0, 0))
+//    .HasApiVersion(new ApiVersion(1, 0))
+//    .ReportApiVersions()
+//    .Build();
 
 app.Seed();
 app.Run();
