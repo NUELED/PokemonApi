@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Serialization;
 using Pokemon.Application.Common.Interfaces;
 using Pokemon.Application.Services;
+using Pokemon.Infrastructure.Cache;
 using Pokemon.Infrastructure.Data;
 using Pokemon.Infrastructure.Repository;
 using Serilog;
@@ -31,6 +32,7 @@ builder.Services.AddControllers().AddNewtonsoftJson(s =>
 
 builder.Services.AddDependencies(builder.Configuration);
 builder.Services.AddScoped<IPokemonRepository, PokemonRepository>();
+builder.Services.AddScoped<RedisCache>();
 
 
 var dbHost = Environment.GetEnvironmentVariable("DB_HOST");              
@@ -45,6 +47,17 @@ builder.Services.AddCors(p => p.AddPolicy("pokemon", builder =>
 {
     builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
 }));
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "Pokemon_";  
+});
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+});
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -78,6 +91,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseHttpsRedirection();
 app.UseCors("pokemon");
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllers();

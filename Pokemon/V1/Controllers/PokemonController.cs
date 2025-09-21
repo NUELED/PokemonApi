@@ -5,6 +5,8 @@ using Newtonsoft.Json;
 using Pokemon.Application.Common.DTO;
 using Pokemon.Application.Common.Interfaces;
 using Pokemon.Domain.Entities;
+using Pokemon.Infrastructure.Cache;
+using System.Dynamic;
 using System.Security.Principal;
 using System.Text.Json.Serialization;
 
@@ -18,9 +20,12 @@ namespace Pokemon.V1.Controllers
     public class PokemonController : ControllerBase
     {
         private readonly IPokemonRepository _service;
-        public PokemonController(IPokemonRepository service)
+        private readonly RedisCache _redisCache;   
+        private bool _isFromCache = false;   
+        public PokemonController(IPokemonRepository service, RedisCache redisCache)
         {
             _service = service;
+            _redisCache = redisCache;   
         }
 
 
@@ -29,12 +34,23 @@ namespace Pokemon.V1.Controllers
         [Route("getAllPokemons")]    
         public async Task<IActionResult> GetAllPokemons([FromQuery] PokemonParameters parameter)
         {
+           // var instanceId = GetInstanceId();
+           // var cacheKey = $"pokemons_Cache_{instanceId}";
+            var cacheKey = "pokemons_Cache";
             try
             {
-              
-               var action = await _service.GetAll_PaginationOne(parameter);
-               var response = new SuccessResponse { Title = "Success", Data = action, StatusCode = StatusCodes.Status200OK, SuccessMessage = "Pokemons retrieved." };
-                return Ok(response);
+              var pokemonsFromCache = _redisCache.GetCachedData<IEnumerable<PokemonDTO>>(cacheKey);
+                if (pokemonsFromCache == null) 
+                {
+                    var pokemons = await _service.GetAll_PaginationOne(parameter);
+                    await _redisCache.SetCachedDataAsync(cacheKey, pokemons, TimeSpan.FromMinutes(5));
+                    pokemonsFromCache = pokemons;
+                    _isFromCache = false;
+                }
+                else
+                    _isFromCache = true;    
+               
+                return Ok(new {Pokemons = pokemonsFromCache, IsFromCache = _isFromCache});
             }
             catch (Exception)
             {
@@ -203,6 +219,17 @@ namespace Pokemon.V1.Controllers
                 });
             }
 
+        }
+
+        private string GetInstanceId()
+        {
+            var instanceId = HttpContext.Session.GetString("InstanceId");
+            if (string.IsNullOrEmpty(instanceId))
+            {
+                instanceId = Guid.NewGuid().ToString();
+                HttpContext.Session.SetString("InstanceId", instanceId);
+            }
+            return instanceId;
         }
 
     }
