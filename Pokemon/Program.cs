@@ -9,6 +9,7 @@ using Pokemon.Application.Common.Interfaces;
 using Pokemon.Application.Services;
 using Pokemon.Infrastructure.Cache;
 using Pokemon.Infrastructure.Data;
+using Pokemon.Infrastructure.RabbitMQ.Connection;
 using Pokemon.Infrastructure.Repository;
 using Serilog;
 using System.Text;
@@ -32,7 +33,9 @@ builder.Services.AddControllers().AddNewtonsoftJson(s =>
 
 builder.Services.AddDependencies(builder.Configuration);
 builder.Services.AddScoped<IPokemonRepository, PokemonRepository>();
+builder.Services.AddScoped<IMessagePublisher, MessagePublisher>();
 builder.Services.AddScoped<RedisCache>();
+builder.Services.AddSingleton<IRabbitMqConnection>(new RabbitMqConnection());
 
 
 var dbHost = Environment.GetEnvironmentVariable("DB_HOST");              

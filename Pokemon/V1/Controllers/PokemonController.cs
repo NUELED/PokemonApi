@@ -20,12 +20,14 @@ namespace Pokemon.V1.Controllers
     public class PokemonController : ControllerBase
     {
         private readonly IPokemonRepository _service;
+        private readonly IMessagePublisher _messagePublisher;
         private readonly RedisCache _redisCache;   
         private bool _isFromCache = false;   
-        public PokemonController(IPokemonRepository service, RedisCache redisCache)
+        public PokemonController(IPokemonRepository service, RedisCache redisCache, IMessagePublisher messagePublisher)
         {
             _service = service;
             _redisCache = redisCache;   
+            _messagePublisher = messagePublisher;   
         }
 
 
@@ -138,6 +140,8 @@ namespace Pokemon.V1.Controllers
             {
                 var action = await _service.Create(pokemonDTO);
                 var response = new SuccessResponse { Title = "Success", Data = action, StatusCode = StatusCodes.Status200OK, SuccessMessage = "Pokemon created." };
+
+                 _messagePublisher.PublishMessageAsync("PokemonsQueue", action);
                 return Ok(response);
             }
             catch (Exception)
